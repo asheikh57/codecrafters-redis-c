@@ -67,7 +67,10 @@ int main() {
 	printf("Client connected\n");
     
 	const char * response = "+PONG\r\n";
+	// buffer to receieve incoming client input
 	char buf[1024];
+
+	// Main server loop
 	while (1) {
 		ssize_t bytes_read = recv(client_fd, buf, sizeof(buf), 0);
 		
