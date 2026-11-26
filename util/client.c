@@ -33,20 +33,26 @@ int main() {
     }
 
     char buf[128];
-    ssize_t n = recv(sock, buf, sizeof(buf) - 1, 0);
-    if (n == -1) {
-        perror("recv");
-        close(sock);
-        return 1;
+    char msg[128] = "PING\nPING\n";
+    for(int i = 0; i < 2; i++)
+    {
+        if(send(sock, msg, strlen(msg), 0) < 0) {
+            printf("Pong failed: %s \n", strerror(errno));
+        }
+        ssize_t n = recv(sock, buf, sizeof(buf) - 1, 0);
+        if (n == -1) {
+            perror("recv");
+            close(sock);
+            return 1;
+        }
+        
+        if(n == 0) {
+            printf("Server closed the connection without sending the data");
+        } else {
+            buf[n] = '\0';
+            printf("Server replied with %s", buf);
+        }
     }
-    
-    if(n == 0) {
-        printf("Server closed the connection without sending the data");
-    } else {
-        buf[n] = '\0';
-        printf("Server replied with %s", buf);
-    }
-
     close(sock);
 
     return 0;

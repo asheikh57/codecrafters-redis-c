@@ -17,7 +17,8 @@ int main() {
 
 	// Uncomment the code below to pass the first stage
 	
-	int server_fd, client_addr_len;
+	int server_fd;
+	socklen_t client_addr_len;
 	struct sockaddr_in client_addr;
 	
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -51,20 +52,35 @@ int main() {
 	}
 	
 	printf("Waiting for a client to connect...\n");
-	client_addr_len = sizeof(client_addr);
+	client_addr_len = (socklen_t) sizeof(client_addr);
 	
-	int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+	int client_fd = accept(
+		server_fd, 
+		(struct sockaddr *) &client_addr,
+		&client_addr_len
+	);
+
 	if (client_fd == -1) {
 		printf("Accept failed: %s \n", strerror(errno));
 		return 1;
 	}
 	printf("Client connected\n");
-
-	const char * pong_response = "+PONG\r\n";
-	if (send(client_fd, pong_response, strlen(pong_response), 0) < 0) {
-		printf("Pong failed: %s \n", strerror(errno));
+    
+	const char * response = "+PONG\r\n";
+	char buf[1024];
+	while (1) {
+		ssize_t bytes_read = recv(client_fd, buf, sizeof(buf), 0);
+		
+		if (bytes_read < 0) {
+            printf("Receive failed: %s \n", strerror(errno));
+			return 1;
+		} else if(bytes_read == 0) {
+			printf("Client closed the connection.\n");
+			break;
+	    } else if (send(client_fd, response, strlen(response), 0) < 0) {
+		    printf("Pong failed: %s \n", strerror(errno));
+		}
 	}
-	
 	close(server_fd);
 
 	return 0;
