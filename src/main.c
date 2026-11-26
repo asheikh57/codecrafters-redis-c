@@ -53,8 +53,17 @@ int main() {
 	printf("Waiting for a client to connect...\n");
 	client_addr_len = sizeof(client_addr);
 	
-	accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+	int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
+	if (client_fd == -1) {
+		printf("Accept failed: %s \n", strerror(errno));
+		return 1;
+	}
 	printf("Client connected\n");
+
+	const char * pong_response = "+PONG\r\n";
+	if (send(client_fd, pong_response, strlen(pong_response), 0) < 0) {
+		printf("Pong failed: %s \n", strerror(errno));
+	}
 	
 	close(server_fd);
 
