@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <string.h>
@@ -79,7 +80,26 @@ int main() {
 			return 1;
 		} else if(bytes_read == 0) {
 			printf("Client closed the connection.\n");
-			break;
+
+			if (listen(server_fd, connection_backlog) != 0) {
+				printf("Listen failed: %s \n", strerror(errno));
+				return 1;
+			}
+	
+			client_fd = accept(
+				server_fd, 
+				(struct sockaddr *) &client_addr,
+				&client_addr_len
+			);
+			
+			if (client_fd == -1) {
+				printf("Accept failed: %s \n", strerror(errno));
+				close(server_fd);
+				return 1;
+			} else {
+				printf("Client Connected\n");
+			}
+
 	    } else if (send(client_fd, response, strlen(response), 0) < 0) {
 		    printf("Pong failed: %s \n", strerror(errno));
 		}
